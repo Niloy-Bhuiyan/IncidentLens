@@ -1,0 +1,9 @@
+{
+  "number": 482,
+  "opened_at": "2026-08-19T10:23:00Z",
+  "title": "Regional checkout requests fail after today's deployment",
+  "labels": ["incident", "checkout", "payments"],
+  "body": "US and EU storefront requests send usd-us/eu-de tags. checkout-api logs show invalid_currency_format with USD_US and EUR_DE. Plain USD requests continue to succeed.",
+  "status": "open"
+}
+

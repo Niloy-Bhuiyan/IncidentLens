@@ -1,0 +1,5 @@
+{"timestamp":"2026-08-19T10:14:02Z","severity":"ERROR","service":"checkout-api","trace_id":"tr-1041","error_signature":"invalid_currency_format","message":"Payment rejected: currency=USD_US expected ISO-4217 alpha-3","deployment":"checkout-2026.08.19.1"}
+{"timestamp":"2026-08-19T10:14:11Z","severity":"ERROR","service":"checkout-api","trace_id":"tr-1047","error_signature":"invalid_currency_format","message":"Payment rejected: currency=EUR_DE expected ISO-4217 alpha-3","deployment":"checkout-2026.08.19.1"}
+{"timestamp":"2026-08-19T10:15:31Z","severity":"ERROR","service":"checkout-api","trace_id":"tr-1094","error_signature":"invalid_currency_format","message":"Payment rejected: currency=USD_US expected ISO-4217 alpha-3","deployment":"checkout-2026.08.19.1"}
+{"timestamp":"2026-08-19T10:18:55Z","severity":"ERROR","service":"checkout-api","trace_id":"tr-1288","error_signature":"invalid_currency_format","message":"Payment rejected: currency=GBP_GB expected ISO-4217 alpha-3","deployment":"checkout-2026.08.19.1"}
+

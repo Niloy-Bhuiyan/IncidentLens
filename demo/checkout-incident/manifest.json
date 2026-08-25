@@ -1,0 +1,31 @@
+{
+  "id": "checkout-incident",
+  "title": "Checkout payment failures after 2026.08.19 deployment",
+  "suggested_question": "Why did checkout failures increase after the latest deployment?",
+  "occurred_at": "2026-08-19T10:14:00Z",
+  "sources": [
+    {"id":"src-payment-service","kind":"source_code","title":"Payment service currency normalization","path":"source/payment_service.py","metadata":{"service":"checkout-api","language":"python","symbol":"normalize_currency"}},
+    {"id":"src-stripe-adapter","kind":"source_code","title":"Stripe payment adapter","path":"source/stripe_adapter.py","metadata":{"service":"payment-service","language":"python","symbol":"create_charge"}},
+    {"id":"log-checkout-errors","kind":"log","title":"Checkout error spike","path":"logs/checkout-errors.jsonl","metadata":{"service":"checkout-api","error_signature":"invalid_currency_format","matching_event_count":37}},
+    {"id":"log-gateway-health","kind":"log","title":"Payment gateway health sample","path":"logs/gateway-health.jsonl","metadata":{"service":"payment-gateway","error_signature":"none"}},
+    {"id":"commit-a81d2c","kind":"commit","title":"Commit a81d2c currency locale support","path":"commits/a81d2c.json","metadata":{"commit":"a81d2c","changed_files":["services/checkout/payment_service.py"],"service":"checkout-api"}},
+    {"id":"deployment-20260819","kind":"deployment","title":"Checkout 2026.08.19 deployment","path":"releases/deployment-2026.08.19.json","metadata":{"deployment":"checkout-2026.08.19.1","service":"checkout-api","commit":"a81d2c"}},
+    {"id":"release-20260819","kind":"release_note","title":"Release 2026.08.19 notes","path":"releases/2026.08.19.md","metadata":{"service":"checkout-api","version":"2026.08.19"}},
+    {"id":"issue-482","kind":"issue","title":"Issue 482 regional checkout currency failures","path":"issues/482.json","metadata":{"service":"checkout-api","issue":"482","error_signature":"invalid_currency_format"}},
+    {"id":"incident-2025-11","kind":"incident","title":"Prior invalid currency incident","path":"incidents/2025-11-invalid-currency.md","metadata":{"service":"checkout-api","incident":"INC-2025-11","error_signature":"invalid_currency_format"}},
+    {"id":"doc-checkout-architecture","kind":"documentation","title":"Checkout payment flow","path":"docs/checkout-architecture.md","metadata":{"service":"checkout-api"}}
+  ],
+  "relationships": [
+    {"from":"deployment-20260819","to":"commit-a81d2c","type":"deploys","weight":1.0},
+    {"from":"commit-a81d2c","to":"src-payment-service","type":"changes","weight":1.0},
+    {"from":"src-payment-service","to":"src-stripe-adapter","type":"calls","weight":0.9},
+    {"from":"log-checkout-errors","to":"src-stripe-adapter","type":"emitted_by","weight":1.0},
+    {"from":"log-checkout-errors","to":"deployment-20260819","type":"after","weight":1.0},
+    {"from":"issue-482","to":"log-checkout-errors","type":"reports","weight":0.9},
+    {"from":"incident-2025-11","to":"log-checkout-errors","type":"same_signature","weight":0.9},
+    {"from":"release-20260819","to":"deployment-20260819","type":"describes","weight":0.8},
+    {"from":"doc-checkout-architecture","to":"src-payment-service","type":"documents","weight":0.7},
+    {"from":"log-gateway-health","to":"log-checkout-errors","type":"contradicts_gateway_outage","weight":0.8}
+  ]
+}
+

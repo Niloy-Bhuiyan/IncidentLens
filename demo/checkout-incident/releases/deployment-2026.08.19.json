@@ -1,0 +1,11 @@
+{
+  "deployment": "checkout-2026.08.19.1",
+  "service": "checkout-api",
+  "started_at": "2026-08-19T09:58:00Z",
+  "completed_at": "2026-08-19T10:00:00Z",
+  "commit": "a81d2c",
+  "region": "global",
+  "status": "completed",
+  "observation": "First invalid_currency_format event occurred at 10:14:02Z, 14 minutes after completion."
+}
+

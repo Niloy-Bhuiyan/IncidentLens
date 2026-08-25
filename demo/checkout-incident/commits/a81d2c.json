@@ -1,0 +1,9 @@
+{
+  "hash": "a81d2c",
+  "timestamp": "2026-08-19T09:42:00Z",
+  "message": "feat(checkout): preserve locale in currency normalization",
+  "changed_files": ["services/checkout/payment_service.py"],
+  "diff": "- return currency.split('-')[0].strip().upper()\n+ return currency.strip().replace('-', '_').upper()",
+  "review_note": "Gateway contract still requires ISO-4217 alpha-3 values. Regional tags must be removed before create_charge."
+}
+

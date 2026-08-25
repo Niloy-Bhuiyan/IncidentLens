@@ -1,0 +1,3 @@
+{"timestamp":"2026-08-19T10:14:00Z","severity":"INFO","service":"payment-gateway","trace_id":"health-700","message":"Gateway p95=181ms success_rate=99.97 status=healthy"}
+{"timestamp":"2026-08-19T10:20:00Z","severity":"INFO","service":"payment-gateway","trace_id":"health-701","message":"Gateway p95=176ms success_rate=99.98 status=healthy"}
+
