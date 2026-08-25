@@ -57,6 +57,8 @@ class DeterministicMockProvider:
             try:
                 data = json.loads(commit.evidence.content)
                 change = str(data.get("message", change)).removeprefix("feat(checkout): ")
+                if not change.lower().startswith(("changed", "introduced", "removed", "replaced")):
+                    change = f"changed behavior to {change}"
             except json.JSONDecodeError:
                 pass
         rejected_value = "a contract-invalid value"

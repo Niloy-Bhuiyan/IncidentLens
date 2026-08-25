@@ -1,0 +1,15 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { SiteFooter } from "@/components/site-footer";
+
+export const metadata: Metadata = { title: "Architecture" };
+
+const nodes = ["Analyze question", "Plan investigation", "Retrieve evidence", "Grade sufficiency", "Rewrite if weak", "Expand graph", "Rerank", "Synthesize", "Verify claims", "Build report"];
+
+export default function ArchitecturePage() {
+  return (
+    <><main className="contentPage architecturePage"><header className="pageHero"><span className="eyebrow">System architecture</span><h1>Small pieces.<br /><em>Visible decisions.</em></h1><p>A deliberately compact RAG system where every runtime dependency has a job and every conclusion keeps its provenance.</p></header><section className="architectureFlow" aria-label="System data flow"><div className="flowNode"><span>01</span><b>Controlled evidence</b><small>Code · logs · changes · history</small></div><i>→</i><div className="flowNode accent"><span>02</span><b>Hybrid retrieval</b><small>Vector + BM25 + RRF</small></div><i>→</i><div className="flowNode"><span>03</span><b>Evidence graph</b><small>Typed causal relationships</small></div><i>→</i><div className="flowNode dark"><span>04</span><b>Verified report</b><small>Citations · contradictions · trace</small></div></section><section className="architectureColumns"><article><span className="eyebrow">Why hybrid</span><h2>Identifiers need exact search. Explanations need vectors.</h2><p>BM25 preserves error signatures and hashes. Computed feature embeddings recover normalized concepts. Reciprocal Rank Fusion combines their ranks without pretending the score scales are comparable.</p><Link href="/evaluation">Inspect the measured difference →</Link></article><article><span className="eyebrow">Why a graph</span><h2>Incidents are relationships, not a pile of chunks.</h2><p>The deployment links to a commit; the commit changes a file; the file calls an adapter; the adapter emits the observed signature. Those edges expand the initial retrieval and remain inspectable.</p></article></section><section className="graphSection"><div><span className="eyebrow">Actual runtime</span><h2>LangGraph, node by node.</h2><p>The conditional branch is not decorative. Weak evidence triggers a rewritten query and a second retrieval pass before synthesis.</p></div><ol>{nodes.map((node, index) => <li key={node} className={node === "Rewrite if weak" ? "conditionalNode" : ""}><span>{String(index + 1).padStart(2, "0")}</span>{node}</li>)}</ol></section><section className="boundarySection"><span className="eyebrow">Trust boundary</span><h2>Evidence is data. Never instruction.</h2><div><p>Versioned prompts label retrieved text as untrusted. Providers receive only selected evidence; citations outside the retrieved allowlist are removed.</p><p>No remote URLs, archive extraction, arbitrary code execution, hidden frontend answer, or paid API is required for the demo.</p></div></section></main><SiteFooter /></>
+  );
+}
+
