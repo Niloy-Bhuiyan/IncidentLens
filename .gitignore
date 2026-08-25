@@ -1,0 +1,32 @@
+# JavaScript
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Local state and secrets
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite*
+.vercel/
+.DS_Store
+Thumbs.db
+
+# Generated but reproducible artifacts
+evaluation/results/*.tmp
+

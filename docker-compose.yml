@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: incidentlens
+      POSTGRES_USER: incidentlens
+      POSTGRES_PASSWORD: local-only
+    ports:
+      - "5432:5432"
+    volumes:
+      - incidentlens-postgres:/var/lib/postgresql/data
+
+volumes:
+  incidentlens-postgres:
+
