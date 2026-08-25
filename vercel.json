@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "{frontend/**,backend/tests/**,tests/**,docs/**,evaluation/**,scripts/**,**/__pycache__/**}"
+      "excludeFiles": "{frontend/**,backend/tests/**,tests/**,docs/**,scripts/**,**/__pycache__/**}"
     }
   },
   "headers": [
@@ -15,4 +15,3 @@
     }
   ]
 }
-

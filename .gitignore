@@ -16,6 +16,7 @@ __pycache__/
 *.egg-info/
 .coverage
 htmlcov/
+*.tsbuildinfo
 
 # Local state and secrets
 .env
@@ -29,4 +30,3 @@ Thumbs.db
 
 # Generated but reproducible artifacts
 evaluation/results/*.tmp
-
