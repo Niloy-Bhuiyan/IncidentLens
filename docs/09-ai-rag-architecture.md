@@ -45,5 +45,5 @@ Prompts live under `backend/app/prompts/<purpose>/<version>.md`, declare input/o
 
 ## Evaluation
 
-Committed queries and expected evidence IDs compare dense-only, hybrid, and full retrieval (hybrid + rerank + graph) using Recall@5, MRR, Precision@5, hit rate, and root-cause evidence coverage. Ground truth is separate from demo content and is never indexed.
+Thirty committed retrieval questions and two unsupported questions compare dense-only, hybrid, and the actual LangGraph + rerank + graph pipeline using Recall@5, MRR, Precision@5, hit rate, root-cause evidence coverage, and full-pipeline abstention. Categories cover exact signatures, semantic descriptions, source, change/deployment, history, temporal, multi-hop, and misleading evidence. Ground truth is separate from demo content and is never indexed.
 

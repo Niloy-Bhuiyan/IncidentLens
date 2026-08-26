@@ -52,5 +52,5 @@ The product ingests controlled local source, JSON/text logs, Markdown/text docum
 
 ## Risks
 
-Lexical feature-hash embeddings are smaller and cheaper than neural embeddings but understand fewer semantic paraphrases. The seeded dataset is intentionally small and does not establish general production accuracy. Stateless serverless deployment does not retain arbitrary ingestion across cold starts.
+Lexical feature-hash embeddings are smaller and cheaper than neural embeddings but understand fewer semantic paraphrases. The 32-query benchmark covers one controlled synthetic corpus and does not establish general production accuracy. Stateless serverless deployment does not retain arbitrary ingestion across cold starts.
 

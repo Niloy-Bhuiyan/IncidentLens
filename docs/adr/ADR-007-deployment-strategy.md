@@ -1,10 +1,10 @@
 # ADR-007: Deployment Strategy
 
 ## Context
-Next.js and FastAPI have first-class Vercel runtimes but different project roots/configuration. The no-cost demo must survive serverless cold starts without persistent infrastructure.
+Next.js and FastAPI have first-class Vercel runtimes but different bundle/configuration needs. The no-cost demo must survive serverless cold starts without persistent infrastructure.
 
 ## Decision
-Deploy two Vercel projects from the private monorepo: frontend rooted at `frontend/`, backend rooted at `backend/`. Point the frontend public API URL to the backend and restrict backend CORS to the frontend. Bundle and lazily index immutable demo evidence.
+Deploy two Vercel projects from the private monorepo: frontend rooted at `frontend/`; backend rooted at the repository root with `api/index.py` as the FastAPI entrypoint so it can import `backend/` and bundle immutable `demo/` and `evaluation/` data. Point the frontend public API URL to the backend and restrict backend CORS to the frontend.
 
 ## Alternatives considered
 Vercel Services can combine multiple services in one project but adds newer platform configuration and availability risk. A separate host increases operational surface. Reimplementing the API in Next.js violates the FastAPI requirement. Hosted PostgreSQL/pgvector adds cost/configuration before v1 needs durability.

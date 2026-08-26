@@ -35,7 +35,7 @@ flowchart LR
 
 ## Deployment view
 
-The private GitHub monorepo feeds two Vercel projects: `incidentlens-api` rooted at `backend/` and `incidentlens` rooted at `frontend/`. The frontend receives only `NEXT_PUBLIC_API_BASE_URL`; backend secrets remain server-side. CORS allows the exact production frontend and local development origin.
+The private GitHub monorepo feeds two Vercel projects: `incidentlens-api` rooted at the repository root so `api/index.py`, backend code, and immutable demo/evaluation data share one Python bundle; and `incidentlens` rooted at `frontend/`. The frontend receives only `NEXT_PUBLIC_API_BASE_URL`; backend secrets remain server-side. Production CORS allows the exact product origin.
 
 ## Failure behavior
 

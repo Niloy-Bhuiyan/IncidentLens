@@ -1,98 +1,105 @@
 <div align="center">
-  <img src="frontend/public/images/mark.svg" width="76" alt="IncidentLens logo" />
+  <img src="frontend/public/images/mark.svg" width="72" alt="IncidentLens logo" />
   <h1>IncidentLens</h1>
-  <p><strong>Find the change behind the failure—with inspectable evidence for every conclusion.</strong></p>
+  <p><strong>AI incident investigation backed by real engineering evidence.</strong></p>
   <p>
-    <a href="#run-locally">Run locally</a> ·
-    <a href="#measured-retrieval">Benchmark</a> ·
+    <a href="https://incidentlens-nine.vercel.app">Live demo</a> ·
+    <a href="#actual-benchmark">Benchmark</a> ·
     <a href="docs/06-system-architecture.md">Architecture</a> ·
-    <a href="docs/10-security-threat-model.md">Threat model</a>
+    <a href="docs/01-prd.md">PRD</a>
   </p>
 </div>
 
 ![IncidentLens investigation workspace](docs/assets/incidentlens-investigation.png)
 
-IncidentLens is an evidence-first software incident investigator. It ingests source, logs, commits, deployments, release notes, issues, architecture documents, and prior incidents; retrieves across them with independent dense and sparse indexes; expands explicit evidence relationships; and uses a real LangGraph workflow to build a cited root-cause hypothesis.
+Your app broke after a deployment. IncidentLens investigates the logs, source code, recent commits, deployment metadata, and previous incidents to find the most likely reason—then lets you open the evidence behind every claim.
 
-The public demo is deterministic and requires no paid API. It does **not** hide a seeded answer in the UI: the report is produced from the indexed corpus, and removing key evidence changes the result in an integration test.
-
-## Why this problem matters
-
-Incident response is a causal reconstruction problem. Runtime evidence says *what* failed, source and commits say *what changed*, deployment metadata says *when*, and historical incidents show whether the signature has appeared before. A plausible summary without those links is difficult to defend.
-
-IncidentLens keeps four things visible:
-
-- the source behind each important claim;
-- contradicting evidence and confidence boundaries;
-- the corrective retrieval branch when initial evidence is weak;
-- the exact retrieval benchmark used for quality claims.
-
-## The built-in case
-
-The synthetic checkout incident includes two services, a currency-normalization change, structured errors, a deployment, a commit diff, a release, an issue, healthy-gateway evidence, architecture documentation, and a previous incident with the same signature.
+**Try it:** [Investigate the hosted checkout incident](https://incidentlens-nine.vercel.app/investigations/demo). No API key or paid model is required.
 
 ```text
-Open IncidentLens
-  → launch the checkout case
-  → ask why failures rose after deployment
-  → inspect deployment, commit, logs, code contract, and contradiction
-  → open any evidence source or the LangGraph trace
+WHAT FAILED
+    ↓
+WHY INCIDENTLENS THINKS IT FAILED
+    ↓
+THE LOGS, CODE, COMMIT, DEPLOYMENT, AND HISTORY THAT SUPPORT IT
 ```
+
+This is not a chatbot wrapper. It is a typed Python/Next.js investigation system with controlled data preparation, hybrid RAG, a compiled LangGraph workflow, replaceable model providers, evidence relationships, reproducible evaluation, and explicit security boundaries.
+
+## The 30-second demo
+
+The built-in case follows a checkout failure spike after release `2026.08.19`:
+
+1. Open the production site and select **Investigate Demo Incident**.
+2. The API rebuilds the controlled incident index and executes the real investigation graph.
+3. The report connects deployment → commit → currency-normalization change → rejected Stripe request.
+4. Select any reason, timeline item, or source type to inspect its raw log, diff, code, deployment record, or previous incident.
+5. Expand the runtime trace to see every completed LangGraph node, including corrective retrieval when triggered.
 
 | Landing | Mobile investigation |
 |---|---|
 | ![IncidentLens landing page](docs/assets/incidentlens-landing.png) | ![IncidentLens mobile investigation](docs/assets/incidentlens-mobile.png) |
 
-## How IncidentLens works
+The evidence is synthetic and clearly labeled. The pipeline and metrics are real.
+
+## Architecture
 
 ```mermaid
 flowchart LR
-  UI[Next.js workspace] --> API[FastAPI v1 API]
-  API --> WF[Compiled LangGraph]
-  FIX[Controlled demo evidence] --> ING[LangChain normalization and splitting]
-  ING --> VEC[384-d feature-hash vectors]
-  ING --> BM[BM25]
+  UI[Next.js evidence workspace] --> API[FastAPI + Pydantic API]
+  API --> LG[Compiled LangGraph]
+  DATA[Logs · code · changes · history] --> PREP[LangChain Documents + splitting]
+  PREP --> VEC[384-d in-memory vector store]
+  PREP --> BM[BM25 sparse index]
   VEC --> RRF[Reciprocal Rank Fusion]
   BM --> RRF
-  RRF --> G[Typed evidence graph]
-  G --> WF
-  WF --> P[Mock / OpenAI / Gemini provider]
-  P --> V[Claim and citation verifier]
-  V --> UI
+  RRF --> EG[Typed evidence graph]
+  EG --> LG
+  LG --> PROVIDER[Deterministic / OpenAI / Gemini]
+  PROVIDER --> VERIFY[Citation verifier]
+  VERIFY --> UI
 ```
 
-### Data preparation
+### Data preparation and LangChain
 
-`parse → validate → normalize → clean → deduplicate → chunk → enrich → embed → index → graph-link`
+`parse → validate → clean → normalize → deduplicate → chunk → metadata → embed → index → graph-link`
 
-LangChain `Document` and `RecursiveCharacterTextSplitter` are runtime-critical, not decorative imports. The local embedding implements LangChain's embeddings interface and maps normalized unigrams/bigrams into deterministic signed feature vectors. Cosine similarity is executed over stored vectors. It is intentionally smaller and less semantic than a neural embedding model; that limitation is measured and documented.
+[`backend/app/ingestion/pipeline.py`](backend/app/ingestion/pipeline.py) creates LangChain `Document` objects and uses `RecursiveCharacterTextSplitter` in the runtime ingestion path. Metadata and content hashes remain attached through indexing and retrieval. Ground-truth answers live under `evaluation/` and are never indexed.
 
-### Hybrid retrieval
+### Hybrid RAG and vector storage
 
-BM25 preserves exact error signatures, hashes, and source identifiers. Vector search recovers normalized concepts. Reciprocal Rank Fusion combines their independent ranks without assuming comparable score scales. A deterministic reranker adds query coverage/source authority, then the evidence graph expands causal neighbors.
+[`backend/app/retrieval/engine.py`](backend/app/retrieval/engine.py) executes three distinct stages:
 
-### LangGraph workflow
+- a deterministic 384-dimensional feature-hash embedding and cosine vector search;
+- BM25 for error codes, hashes, symbols, and exact operational language;
+- reciprocal-rank fusion, bounded reranking, and evidence-graph expansion.
+
+The hosted demo uses a **real in-process vector store**, not a managed vector database and not a neural embedding service. That choice keeps the public demo reproducible and free. PostgreSQL + pgvector is a documented future scale path, not a current implementation claim; see [ADR-002](docs/adr/ADR-002-vector-store.md).
+
+### LangGraph controls the investigation
+
+[`backend/app/agents/graph.py`](backend/app/agents/graph.py) compiles and runs this state machine:
 
 ```mermaid
 flowchart TD
-  A[Analyze question] --> P[Plan investigation]
-  P --> R[Retrieve evidence]
-  R --> G[Grade sufficiency]
-  G -->|insufficient| W[Rewrite query]
-  W --> R2[Retrieve again]
-  G -->|sufficient| X[Expand relationships]
+  A[analyze_question] --> P[plan_investigation]
+  P --> R[retrieve_evidence]
+  R --> G[grade_evidence]
+  G -->|weak| W[rewrite_query]
+  W --> R2[retrieve_again]
+  G -->|enough| X[expand_related]
   R2 --> X
-  X --> RR[Rerank]
-  RR --> S[Synthesize root cause]
-  S --> V[Verify claim citations]
-  V --> B[Build evidence report]
+  X --> RR[rerank]
+  RR --> S[synthesize_root_cause]
+  S --> V[verify_claims]
+  V --> B[build_report]
 ```
 
-Every node appends a safe timing/decision trace. The forced-correction integration test proves the conditional rewrite and second retrieval path execute.
+Every node appends a sanitized trace. An integration test asserts that `grade_evidence → rewrite_query → retrieve_again` actually executes; another removes the key commit and proves the synthesis changes.
 
 ### Evidence graph
 
-The graph represents typed, weighted, provenance-bearing relationships:
+The graph makes causal neighbors useful instead of treating the corpus as unrelated chunks:
 
 ```text
 deployment --deploys--> commit --changes--> source file
@@ -101,60 +108,74 @@ prior incident --same_signature--> error log
 gateway health --contradicts_gateway_outage--> error log
 ```
 
-## Measured retrieval
+### Model-provider architecture
 
-Generated from [`evaluation/results/latest.json`](evaluation/results/latest.json) with four committed queries and ground-truth IDs that are never indexed:
+| Provider | Purpose | Implementation |
+|---|---|---|
+| OpenAI | Real supported integration | Official async SDK, configured model, environment-only key, 20 s timeout, two SDK retries, Pydantic structured output, safe translated errors |
+| Gemini | Real alternate integration | Official Google GenAI SDK, configured model, JSON-schema output, timeout, safe errors |
+| Deterministic demo | Hosted free mode and repeatable tests | Derives the report only from supplied ranked evidence and abstains when the corpus does not support the question |
 
-| Configuration | Recall@5 | Precision@5 | MRR | Evidence hit rate | Root-cause coverage |
-|---|---:|---:|---:|---:|---:|
-| Dense baseline | 0.3708 | 0.3000 | 0.3750 | 0.7500 | 1.0000 |
-| Hybrid (BM25 + vector + RRF) | 0.6708 | 0.5000 | 0.7083 | 1.0000 | 1.0000 |
-| Full pipeline (+ rerank + graph) | 0.6708 | 0.5000 | 1.0000 | 1.0000 | 1.0000 |
+The hosted site defaults to deterministic mode so visitors do not consume paid credits. It does **not** claim an OpenAI call occurred. All three providers run behind the same retrieval, LangGraph, and citation-verification path. Selecting an unconfigured provider returns a typed `503`; there is no disguised fallback.
 
-On this small synthetic dataset, hybrid retrieval improves Recall@5 over the bundled dense baseline. The full pipeline improves first-relevant rank. These numbers do **not** establish general incident-resolution accuracy.
+Prompts are genuinely versioned under [`backend/app/prompts/`](backend/app/prompts/). They mark retrieved text as untrusted data and constrain citations to supplied evidence IDs.
 
-Reproduce them:
+See the live [Under the Hood](https://incidentlens-nine.vercel.app/under-the-hood) map and [FastAPI contract](https://incidentlens-api-delta.vercel.app/docs).
+
+## Actual benchmark
+
+The committed v2 benchmark contains **32 seeded questions**: 30 retrieval questions and two insufficient-evidence/abstention cases. It covers exact error codes, semantic descriptions, source symbols, commits, deployments, releases, historical incidents, temporal clues, multi-hop relationships, distracting gateway evidence, and unsupported questions.
+
+Results below were generated by executing the current code from source against committed ground truth:
+
+| Configuration | Recall@5 | Precision@5 | MRR | Evidence hit rate | Root-cause coverage | Abstention |
+|---|---:|---:|---:|---:|---:|---:|
+| Dense-only vector retrieval | 0.6778 | 0.3200 | 0.4359 | 0.9333 | 0.6778 | N/A |
+| Hybrid vector + BM25 + RRF | 0.8167 | 0.3933 | 0.8306 | 1.0000 | 0.8167 | N/A |
+| Full LangGraph + rerank + graph | 0.8389 | 0.4067 | 0.8500 | 1.0000 | 0.8389 | 1.0000 (2/2) |
+
+On this controlled corpus, hybrid retrieval materially improves Recall@5 and MRR over dense-only retrieval; the full pipeline improves them again and abstains on both unsupported questions. These results do **not** establish general production incident accuracy.
+
+Reproduce and compare the stable fields:
 
 ```bash
 python -m backend.app.evaluation.runner
-git diff --exit-code evaluation/results/latest.json
+python scripts/ci/verify_benchmark.py
 ```
 
-## Technology
+Source: [`evaluation/datasets/incident-retrieval-v2.json`](evaluation/datasets/incident-retrieval-v2.json) and [`evaluation/results/latest.json`](evaluation/results/latest.json).
 
-| Layer | Implementation |
+## Technology map
+
+| Requirement | Genuine implementation |
 |---|---|
-| Web | Next.js 16.3, React 19.2, TypeScript 6, App Router |
-| API | Python 3.12+, FastAPI 0.141, Pydantic v2 |
-| RAG | LangChain Core 1.6, LangChain Text Splitters 1.1 |
-| Orchestration | LangGraph 1.2 compiled state graph |
-| Retrieval | feature-hash embeddings, cosine vector search, BM25, RRF, deterministic reranking |
-| Relationships | in-memory typed evidence graph |
-| Providers | deterministic mock, official OpenAI SDK, official Gemini SDK |
-| Persistence | SQLite migrations/local repository; pgvector-compatible protocol and local Docker target |
-| Quality | pytest, Ruff, mypy, Vitest, Testing Library, Playwright |
-| Delivery | GitHub Actions and separate Vercel frontend/API projects |
+| Python / APIs | Python 3.12+, FastAPI 0.141, Pydantic v2 contracts and middleware |
+| AI / RAG | controlled evidence preparation, dense + sparse retrieval, fusion, reranking, citations |
+| LangChain | runtime `Document`, text splitting, and embeddings interface |
+| LangGraph | compiled conditional investigation graph with a tested correction branch |
+| Vector search | computed vectors, in-memory index, cosine similarity; accurately bounded above |
+| OpenAI | official SDK adapter with structured output and mocked contract tests |
+| Prompt engineering | purpose/version directories, untrusted-evidence boundary, citation verification |
+| Evaluation | 32-query ground truth, Recall@5, Precision@5, MRR, hit rate, coverage, abstention |
+| Web | Next.js 16.3, React 19.2, TypeScript 6, accessible responsive evidence workspace |
+| Delivery | GitHub Actions plus separately deployed Vercel web/API projects |
 
 ## Repository map
 
 ```text
-backend/app/        FastAPI, ingestion, retrieval, graph, LangGraph, providers
-backend/tests/      unit, integration, API, and evaluation tests
-frontend/           Next.js application and component tests
-demo/               only source of seeded incident evidence
+backend/app/        FastAPI, ingestion, retrieval, evidence graph, LangGraph, providers
+backend/tests/      unit, integration, API, provider, security, and evaluation tests
+frontend/           Next.js product, Under the Hood proof, and component tests
+demo/               only indexed synthetic incident evidence
 evaluation/         separate ground truth and generated metrics
-tests/e2e/          desktop and mobile browser system test
-docs/               PRD, architecture, ADRs, threat model, reports, screenshots
-scripts/            CI, security, and release utilities
+tests/e2e/          desktop and mobile browser journey
+docs/               PRD, architecture, ADRs, threat model, release evidence
+scripts/            benchmark consistency and security gates
 ```
 
 ## Run locally
 
-### Prerequisites
-
-- Node.js 22+ (validated with 24.15)
-- pnpm 11
-- Python 3.12–3.14 (validated with 3.13)
+Prerequisites: Node.js 22+, pnpm 11, and Python 3.12–3.14.
 
 ```bash
 git clone https://github.com/Niloy-Bhuiyan/IncidentLens.git
@@ -162,95 +183,73 @@ cd IncidentLens
 cp .env.example .env
 pnpm install
 python -m pip install -e "backend[dev]"
-```
-
-Start both services:
-
-```bash
 make dev
 ```
 
-Or run them separately:
+Or start the services separately:
 
 ```bash
 python -m uvicorn backend.app.main:app --reload --port 8000
 pnpm --dir frontend dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs).
+Open [localhost:3000](http://localhost:3000) and [localhost:8000/docs](http://localhost:8000/docs).
 
 ### Environment variables
 
-| Variable | Required | Default/purpose |
+| Variable | Required | Purpose |
 |---|---|---|
-| `INCIDENTLENS_LLM_PROVIDER` | No | `mock`; selects server default |
-| `OPENAI_API_KEY` | OpenAI mode only | Official SDK credential, backend only |
-| `GEMINI_API_KEY` | Gemini mode only | Official SDK credential, backend only |
+| `INCIDENTLENS_LLM_PROVIDER` | No | Defaults to `mock` |
+| `INCIDENTLENS_OPENAI_API_KEY` | OpenAI mode only | Server-only SDK credential |
+| `INCIDENTLENS_OPENAI_MODEL` | No | Defaults to `gpt-5-mini` |
+| `INCIDENTLENS_GEMINI_API_KEY` | Gemini mode only | Server-only SDK credential |
+| `INCIDENTLENS_GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash` |
 | `INCIDENTLENS_ALLOWED_ORIGINS` | Production | Exact frontend origins |
-| `INCIDENTLENS_DATABASE_URL` | No | Local relational storage target |
-| `NEXT_PUBLIC_API_BASE_URL` | Yes in deployment | Public FastAPI base URL |
+| `INCIDENTLENS_DATABASE_URL` | No | Local SQLite relational target |
+| `NEXT_PUBLIC_API_BASE_URL` | Deployment | Public FastAPI base URL; never a provider secret |
 
-The application never pretends a missing provider call succeeded. Selecting an unconfigured hosted provider produces a typed `503`; mock mode remains available.
-
-## Quality gates
+## Quality and security
 
 ```bash
-make test       # pytest + Vitest
-make lint       # Ruff + mypy + ESLint + TypeScript
-make eval       # deterministic benchmark
-make security   # local secret scan + dependency audits
-pnpm e2e        # real backend/frontend, desktop + mobile Chromium
-pnpm build      # production Next.js build
+make test
+make lint
+make eval
+make security
+pnpm e2e
+pnpm build
 ```
 
-Current verified local results:
+The release gate covers backend unit/API/integration/provider tests, corrective LangGraph retrieval, retrieval mutation, frontend interaction/error tests, desktop/mobile E2E, production build, working-tree/history secret scans, Python/JavaScript dependency audits, prompt injection, XSS rendering, traversal-shaped IDs, body limits, SSRF surface review, headers, and exact-origin CORS.
 
-- backend: 19 tests passed; Ruff and strict mypy passed;
-- frontend: 5 tests passed with 70% statement / 72.5% line coverage; ESLint and TypeScript passed;
-- E2E: 2 projects passed (desktop Chromium and Pixel 7 emulation);
-- production build: all routes compiled successfully;
-- browser visual audit: no horizontal overflow or console warnings/errors at the inspected breakpoints.
+Security boundaries:
 
-See the dated [system test report](docs/reports/system-test-report.md), [security audit](docs/reports/security-audit.md), and [production smoke test](docs/reports/production-smoke-test.md) for executed evidence and any remaining blockers.
+- questions, evidence, and provider output are untrusted;
+- the API accepts one controlled demo ID, not paths, URLs, uploads, or archives;
+- evidence is read from a resolved allowlisted root and never executed;
+- React renders source as text; no `dangerouslySetInnerHTML` is used;
+- provider keys remain backend-only and safe logs never include prompts, evidence, or credentials;
+- final citation IDs must exist in the retrieved evidence allowlist.
 
-## Security model
+Read the [threat model](docs/10-security-threat-model.md), [test strategy](docs/11-testing-strategy.md), [system test report](docs/reports/system-test-report.md), [security audit](docs/reports/security-audit.md), and [production smoke report](docs/reports/production-smoke-test.md).
 
-- Evidence, questions, and provider output are untrusted data.
-- The API accepts a built-in demo ID—not filesystem paths, URLs, uploads, or archives.
-- Source is read only from a resolved allowlisted root and is never executed.
-- React renders evidence as text; no `dangerouslySetInnerHTML` is used.
-- Request/body/file limits, exact-origin CORS, rate limiting, CSP, security headers, request IDs, and safe errors are implemented.
-- Prompt versions state the instruction boundary; final citation IDs must belong to retrieved evidence.
-- `.env` and credentials are ignored; CI runs working-tree/history secret scans and dependency audits.
+## SDLC evidence
 
-Review the full [threat model](docs/10-security-threat-model.md). Passing the included controls does not make the project universally secure; multi-tenant auth, durable rate limiting, and arbitrary uploads are deliberately out of scope.
+- [Product vision](docs/00-product-vision.md), [PRD](docs/01-prd.md), [functional](docs/02-functional-requirements.md), and [non-functional requirements](docs/03-non-functional-requirements.md)
+- [System architecture](docs/06-system-architecture.md), [data architecture](docs/07-data-architecture.md), and [AI/RAG architecture](docs/09-ai-rag-architecture.md)
+- [API design](docs/08-api-design.md), [testing strategy](docs/11-testing-strategy.md), and [release checklist](docs/14-release-checklist.md)
+- [Architecture Decision Records](docs/adr/) and [hostile audit](docs/reports/hostile-final-audit.md)
 
-## Deployment
+## Limitations
 
-The monorepo deploys as two Vercel projects:
+- The evidence and benchmark are synthetic and limited to one controlled checkout corpus.
+- Feature-hash embeddings are deterministic and cheap but less semantic than neural embeddings.
+- The hosted vector and evidence-graph indexes are rebuilt in memory after a serverless cold start.
+- Investigation history is process-local; a direct URL may rebuild the demo rather than retrieve a durable record.
+- The public demo has no authentication or arbitrary customer-data ingestion.
+- OpenAI and Gemini adapters are tested without spending paid credits; provider quality is not part of the deterministic benchmark.
 
-1. the FastAPI project from the repository root (`api/index.py`);
-2. the Next.js project rooted at `frontend/`, with `NEXT_PUBLIC_API_BASE_URL` pointed at the API.
-
-This keeps framework runtimes independently diagnosable. The seeded corpus is bundled read-only and lazily reindexed after a cold start. Arbitrary investigation history is process-local in v1.
-
-Production URLs are added here only after actual smoke verification.
-
-## Limitations and roadmap
-
-Read [known limitations](docs/15-known-limitations.md) before interpreting the demo or metrics. Near-term improvements are a durable PostgreSQL/pgvector adapter, a stronger optional local neural embedding, authenticated user namespaces, and controlled direct file ingestion with a separate upload threat model.
-
-IncidentLens does not execute code, connect to production, remediate systems, guarantee root cause, or replace observability tooling.
-
-## Documentation
-
-- [Product vision](docs/00-product-vision.md) and [PRD](docs/01-prd.md)
-- [System architecture](docs/06-system-architecture.md) and [AI/RAG architecture](docs/09-ai-rag-architecture.md)
-- [API design](docs/08-api-design.md) and [data architecture](docs/07-data-architecture.md)
-- [Testing strategy](docs/11-testing-strategy.md) and [release checklist](docs/14-release-checklist.md)
-- [Architecture Decision Records](docs/adr/)
+IncidentLens does not execute source, connect to production systems, remediate incidents, guarantee root cause, or replace observability tooling. See [known limitations](docs/15-known-limitations.md).
 
 ## License
 
 [MIT](LICENSE) © 2026 Niloy Bhuiyan
-
