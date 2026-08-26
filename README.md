@@ -217,6 +217,7 @@ make eval
 make security
 pnpm e2e
 pnpm build
+node scripts/ci/production_browser_probe.mjs
 ```
 
 The release gate covers backend unit/API/integration/provider tests, corrective LangGraph retrieval, retrieval mutation, frontend interaction/error tests, desktop/mobile E2E, production build, working-tree/history secret scans, Python/JavaScript dependency audits, prompt injection, XSS rendering, traversal-shaped IDs, body limits, SSRF surface review, headers, and exact-origin CORS.
