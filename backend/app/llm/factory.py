@@ -9,7 +9,7 @@ def create_provider(name: str, settings: Settings) -> LLMProvider:
     if name == "mock":
         return DeterministicMockProvider()
     if name == "openai":
-        return OpenAIProvider(settings.openai_api_key)
+        return OpenAIProvider(settings.openai_api_key, settings.openai_model)
     if name == "gemini":
-        return GeminiProvider(settings.gemini_api_key)
+        return GeminiProvider(settings.gemini_api_key, settings.gemini_model)
     raise ValueError("unknown provider")

@@ -5,6 +5,58 @@ import re
 
 from backend.app.domain.models import Citation, ProviderDraft, RankedEvidence
 
+_QUESTION_STOPWORDS = {
+    "a",
+    "after",
+    "and",
+    "app",
+    "are",
+    "before",
+    "broke",
+    "cause",
+    "caused",
+    "did",
+    "do",
+    "does",
+    "failure",
+    "failures",
+    "for",
+    "from",
+    "how",
+    "incident",
+    "is",
+    "latest",
+    "of",
+    "the",
+    "this",
+    "to",
+    "was",
+    "were",
+    "what",
+    "when",
+    "which",
+    "why",
+    "with",
+}
+
+
+def _question_has_evidence(question: str, evidence: list[RankedEvidence]) -> bool:
+    question_terms = {
+        term
+        for term in re.findall(r"[a-z0-9_-]+", question.lower())
+        if len(term) >= 3 and term not in _QUESTION_STOPWORDS
+    }
+    corpus_terms = set(
+        re.findall(
+            r"[a-z0-9_-]+",
+            " ".join(
+                f"{item.evidence.title} {item.evidence.content} {item.evidence.metadata}"
+                for item in evidence
+            ).lower(),
+        )
+    )
+    return bool(question_terms & corpus_terms)
+
 
 def _first_by_kind(evidence: list[RankedEvidence], *kinds: str) -> RankedEvidence | None:
     return next((item for item in evidence if item.evidence.kind.value in kinds), None)
@@ -16,7 +68,24 @@ class DeterministicMockProvider:
     name = "mock"
 
     async def synthesize(self, question: str, evidence: list[RankedEvidence], prompt: str) -> ProviderDraft:
-        del question, prompt
+        del prompt
+        if not _question_has_evidence(question, evidence):
+            return ProviderDraft(
+                likely_root_cause=(
+                    "The indexed incident evidence is insufficient to support a root-cause hypothesis "
+                    "for this question."
+                ),
+                affected_service="unknown",
+                citations=[
+                    Citation(
+                        evidence_id=item.evidence.id,
+                        claim="This is the closest available evidence, but it does not establish the answer.",
+                    )
+                    for item in evidence[:2]
+                ],
+                contradictions=[],
+                provider=self.name,
+            )
         commit = _first_by_kind(evidence, "commit")
         deployment = _first_by_kind(evidence, "deployment")
         error_log = next(
@@ -28,8 +97,11 @@ class DeterministicMockProvider:
             _first_by_kind(evidence, "log"),
         )
         source = _first_by_kind(evidence, "source_code")
+        prior_incident = _first_by_kind(evidence, "incident")
         health = next((item for item in evidence if "status=healthy" in item.evidence.content), None)
-        selected = [item for item in (deployment, commit, error_log, source) if item is not None]
+        selected = [
+            item for item in (deployment, commit, error_log, source, prior_incident) if item is not None
+        ]
         if len(selected) < 2:
             return ProviderDraft(
                 likely_root_cause=(
@@ -71,8 +143,8 @@ class DeterministicMockProvider:
         deployment_label = deployment.evidence.title if deployment else "The latest deployment"
         root_cause = (
             f"{deployment_label} introduced {commit_hash}, which {change.lower()}. "
-            f"The resulting value {rejected_value} violated the payment-adapter contract and triggered "
-            f"{signature} in checkout requests."
+            f"That change sent {rejected_value} to the payment adapter even though its contract accepts "
+            f"only three-letter currency codes. Checkout then raised {signature}."
         )
         affected_service = next(
             (
@@ -90,6 +162,7 @@ class DeterministicMockProvider:
                     "commit": "Shows the normalization change and affected file.",
                     "log": "Shows the post-deployment error signature and rejected value.",
                     "source_code": "Shows the deployed normalization or adapter contract.",
+                    "incident": "Shows the same error signature in a previous normalization incident.",
                 }.get(item.evidence.kind.value, "Supports the change-to-failure path."),
             )
             for item in selected

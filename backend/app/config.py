@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     demo_root: Path = Field(default_factory=lambda: Path(__file__).resolve().parents[2] / "demo")
     evaluation_root: Path = Field(default_factory=lambda: Path(__file__).resolve().parents[2] / "evaluation")
     openai_api_key: str | None = None
+    openai_model: str = "gpt-5-mini"
     gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
 
     @field_validator("llm_provider")
     @classmethod
