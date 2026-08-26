@@ -78,3 +78,16 @@ async def test_prompt_injection_question_cannot_create_citations(settings: Setti
     }
     assert "secret-id" not in citation_ids
     assert citation_ids <= retrieved_ids
+
+
+@pytest.mark.asyncio
+async def test_unsupported_question_abstains_with_low_confidence(settings: Settings) -> None:
+    service = InvestigationService(settings)
+    record = await service.investigate(
+        "Did a database migration cause authentication login timeouts?", "mock"
+    )
+
+    assert "insufficient" in record.report.likely_root_cause.lower()
+    assert record.report.affected_service == "unknown"
+    assert record.report.confidence == "Low"
+    assert record.report.confidence_score == 0.25

@@ -222,7 +222,12 @@ class InvestigationWorkflow:
         cited = [item.evidence for item in state["retrieved"] if item.evidence.id in cited_ids]
         kinds = {item.kind.value for item in cited}
         coverage = sum(value in kinds for value in ("log", "commit", "deployment", "source_code")) / 4
-        score = min(0.94, 0.48 + coverage * 0.4 + min(len(draft.contradictions), 1) * 0.06)
+        abstained = draft.affected_service == "unknown" and "insufficient" in draft.likely_root_cause.lower()
+        score = (
+            0.25
+            if abstained
+            else min(0.94, 0.48 + coverage * 0.4 + min(len(draft.contradictions), 1) * 0.06)
+        )
         confidence = "High" if score >= 0.8 else "Moderate" if score >= 0.6 else "Low"
         timeline = sorted(
             [
@@ -255,6 +260,11 @@ class InvestigationWorkflow:
             limitations=[
                 "This is a ranked hypothesis, not proof of causality.",
                 "The seeded corpus may omit alternative causes.",
+                *(
+                    ["The indexed evidence does not support the requested failure scenario."]
+                    if abstained
+                    else []
+                ),
             ],
             provider=draft.provider,
             prompt_version="root_cause/v1",
