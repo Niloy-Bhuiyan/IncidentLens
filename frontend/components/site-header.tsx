@@ -4,7 +4,7 @@ import Link from "next/link";
 const links = [
   ["Investigate", "/investigations/demo"],
   ["Evaluation", "/evaluation"],
-  ["Architecture", "/architecture"],
+  ["Under the Hood", "/under-the-hood"],
   ["About", "/about"],
 ];
 
