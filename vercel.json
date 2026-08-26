@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "buildCommand": null,
+  "installCommand": "",
   "functions": {
     "api/**/*.py": {
       "excludeFiles": "{frontend/**,backend/tests/**,tests/**,docs/**,scripts/**,**/__pycache__/**}"

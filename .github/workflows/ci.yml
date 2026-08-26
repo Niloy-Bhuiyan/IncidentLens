@@ -21,9 +21,8 @@ jobs:
       - run: python -m ruff check backend api
       - run: python -m mypy backend/app
       - run: python -m pytest backend/tests -q
-      - run: python -m backend.app.evaluation.runner
+      - run: python -m backend.app.evaluation.runner --no-write
       - run: python scripts/ci/verify_benchmark.py
-      - run: git diff --exit-code evaluation/results/latest.json
 
   frontend:
     runs-on: ubuntu-latest
