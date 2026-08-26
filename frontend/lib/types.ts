@@ -81,6 +81,9 @@ export interface EvaluationResult {
   dataset_version: string;
   generated_at: string;
   query_count: number;
+  retrieval_query_count: number;
+  insufficient_evidence_query_count: number;
+  categories: string[];
   k: number;
   embedding: string;
   fusion: string;
@@ -92,6 +95,7 @@ export interface EvaluationResult {
       mrr: number;
       evidence_hit_rate: number;
       root_cause_evidence_coverage: number;
+      abstention_accuracy: number;
     }
   >;
 }
