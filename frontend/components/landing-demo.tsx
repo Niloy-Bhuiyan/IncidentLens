@@ -39,9 +39,9 @@ export function LandingDemo() {
         <span><b>{demo.relationship_count}</b> links</span>
       </div>
       <Link className="primaryButton" href="/investigations/demo">
-        Investigate this incident <span aria-hidden="true">→</span>
+        Investigate Demo Incident <span aria-hidden="true">→</span>
       </Link>
-      <p className="microcopy">Runs ingestion, vector + BM25 retrieval, graph expansion, and LangGraph verification.</p>
+      <p className="microcopy">Free deterministic demo · Same pipeline as the implemented OpenAI and Gemini providers.</p>
     </section>
   );
 }

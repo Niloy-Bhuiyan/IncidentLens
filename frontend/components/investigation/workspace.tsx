@@ -63,6 +63,10 @@ export function InvestigationWorkspace({ initialId }: { initialId: string }) {
     () => investigation?.evidence.find((item) => item.evidence.id === selectedId)?.evidence,
     [investigation, selectedId],
   );
+  const rootCauseSentences = useMemo(
+    () => investigation?.report.likely_root_cause.split(/(?<=[.!?])\s+(?=[A-Z])/).map((item) => item.trim()) ?? [],
+    [investigation],
+  );
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -84,7 +88,8 @@ export function InvestigationWorkspace({ initialId }: { initialId: string }) {
           <span className="railTitle">Sources</span>
           {Object.entries(sourceLabels).map(([kind, label]) => {
             const count = investigation?.evidence.filter((item) => item.evidence.kind === kind).length ?? 0;
-            return <div className="sourceType" key={kind}><span>{label}</span><b>{count || "·"}</b></div>;
+            const first = investigation?.evidence.find((item) => item.evidence.kind === kind)?.evidence.id;
+            return <button className="sourceType" disabled={!first} key={kind} onClick={() => first && setSelectedId(first)}><span>{label}</span><b>{count || "·"}</b></button>;
           })}
           <Link href="/architecture" className="railLink">How retrieval works →</Link>
         </aside>
@@ -109,14 +114,20 @@ export function InvestigationWorkspace({ initialId }: { initialId: string }) {
             )}
             {investigation && !loading && (
               <>
+                <section className="failureSummary" aria-labelledby="failure-heading">
+                  <span className="eyebrow">What failed</span>
+                  <h2 id="failure-heading">Checkout payment requests started failing after the latest deployment.</h2>
+                  <p>The investigation connects that runtime failure to the change most strongly supported by the indexed incident evidence.</p>
+                </section>
                 <article className="rootCauseCard">
-                  <div className="resultLabel"><span>Likely root cause</span><b>{investigation.report.confidence} confidence · {Math.round(investigation.report.confidence_score * 100)}%</b></div>
-                  <h2>{investigation.report.likely_root_cause}</h2>
+                  <div className="resultLabel"><span>Why IncidentLens thinks it failed</span><b>{investigation.report.confidence} confidence · {Math.round(investigation.report.confidence_score * 100)}%</b></div>
+                  <h2>{rootCauseSentences[0] ?? investigation.report.likely_root_cause}</h2>
+                  {rootCauseSentences.length > 1 && <p className="rootCauseExplanation">{rootCauseSentences.slice(1).join(" ")}</p>}
                   <div className="resultMeta"><span>Affected service</span><b>{investigation.report.affected_service}</b><span>Relevant commit</span><b>{investigation.report.relevant_commits[0] || "Not established"}</b></div>
                 </article>
 
                 <section className="evidenceTrail" aria-labelledby="evidence-heading">
-                  <div className="sectionHeading"><div><span className="eyebrow">Provenance</span><h2 id="evidence-heading">Evidence trail</h2></div><span>{investigation.report.supporting_evidence.length} verified claims</span></div>
+                  <div className="sectionHeading"><div><span className="eyebrow">The evidence</span><h2 id="evidence-heading">Why this conclusion is credible</h2></div><span>{investigation.report.supporting_evidence.length} clickable sources</span></div>
                   {investigation.report.supporting_evidence.map((citation, index) => {
                     const item = investigation.evidence.find((entry) => entry.evidence.id === citation.evidence_id);
                     if (!item) return null;
@@ -167,8 +178,8 @@ export function InvestigationWorkspace({ initialId }: { initialId: string }) {
 function InvestigationSkeleton() {
   return (
     <section className="loadingState" aria-label="Investigation in progress">
-      <div className="loadingTop"><span className="spinner" aria-hidden="true" /><div><b>Building the evidence trail</b><p>Dense + BM25 retrieval, graph expansion, then claim verification.</p></div></div>
-      {["Analyze and plan", "Retrieve and grade", "Expand and verify"].map((label, index) => <div className="loadingStep" key={label}><span>{index + 1}</span><p>{label}</p><i /></div>)}
+      <div className="loadingTop"><span className="spinner" aria-hidden="true" /><div><b>Investigating the checkout failure</b><p>The API will return the report together with its completed execution trace.</p></div></div>
+      {["Reading incident evidence", "Searching logs and recent changes", "Connecting related evidence", "Verifying the conclusion"].map((label, index) => <div className="loadingStep" key={label}><span>{index + 1}</span><p>{label}</p><i /></div>)}
     </section>
   );
 }

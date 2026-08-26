@@ -21,11 +21,11 @@ describe("LandingDemo", () => {
 
     render(<LandingDemo />);
 
-    expect(screen.getByRole("link", { name: /investigate this incident/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /investigate demo incident/i })).toHaveAttribute(
       "href",
       "/investigations/demo",
     );
-    expect(screen.getByText(/vector \+ BM25 retrieval/i)).toBeInTheDocument();
+    expect(screen.getByText(/same pipeline as the implemented OpenAI/i)).toBeInTheDocument();
     expect(await screen.findByText(/Checkout evidence/)).toBeInTheDocument();
   });
 });

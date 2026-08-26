@@ -9,17 +9,17 @@ export default function Home() {
       <main>
         <section className="hero">
           <div className="heroCopy">
-            <span className="eyebrow">Evidence-first incident investigation</span>
-            <h1>Find the change<br />behind the failure.</h1>
-            <p>IncidentLens connects logs, source, commits, deployments, and prior incidents into a root-cause hypothesis you can inspect—not merely trust.</p>
-            <div className="heroActions"><Link className="primaryButton" href="/investigations/demo">Investigate the demo <span>→</span></Link><Link className="textLink" href="/architecture">See the system design</Link></div>
-            <ul className="trustList"><li><span>01</span>Every claim cites source evidence</li><li><span>02</span>Corrective retrieval is visible</li><li><span>03</span>No paid model required</li></ul>
+            <span className="eyebrow">AI investigation for deployment failures</span>
+            <h1>Your app broke after a deployment.<br />Find out why.</h1>
+            <p>IncidentLens investigates the logs, source code, recent commits, deployments, and previous incidents—then returns the most likely root cause with the evidence behind it.</p>
+            <div className="heroActions"><Link className="primaryButton" href="/investigations/demo">Investigate Demo Incident <span>→</span></Link><Link className="textLink" href="/architecture">See how it works</Link></div>
+            <ul className="trustList"><li><span>01</span>Connect the failure to the change</li><li><span>02</span>Open the evidence for every claim</li><li><span>03</span>Try the hosted demo without an API key</li></ul>
           </div>
           <LandingDemo />
         </section>
 
         <section className="howItWorks" aria-labelledby="how-heading">
-          <div><span className="eyebrow">Investigation, not chat</span><h2 id="how-heading">A causal path, assembled in public.</h2></div>
+          <div><span className="eyebrow">What happens under the hood</span><h2 id="how-heading">A causal path you can inspect.</h2></div>
           <ol>
             <li><span>01</span><h3>Index the incident</h3><p>Normalize code, logs, commits, releases, issues, and history into cited evidence.</p></li>
             <li><span>02</span><h3>Retrieve, then correct</h3><p>Fuse vector and BM25 ranks. If evidence is weak, rewrite and search again.</p></li>
@@ -29,7 +29,7 @@ export default function Home() {
 
         <section className="proofSection">
           <div className="proofQuote"><span className="eyebrow">The output</span><blockquote>“Deployment → commit → contract violation → first error.”</blockquote><p>Not a magic answer. An evidence trail with a confidence boundary.</p></div>
-          <div className="proofLinks"><Link href="/evaluation"><span>Measured retrieval</span><b>Dense vs hybrid vs full pipeline →</b></Link><Link href="/architecture"><span>Inspectable workflow</span><b>See every LangGraph node →</b></Link></div>
+          <div className="proofLinks"><Link href="/evaluation"><span>Measured retrieval</span><b>Dense vs hybrid vs full pipeline →</b></Link><Link href="/under-the-hood"><span>Verified implementation</span><b>See where each AI component runs →</b></Link></div>
         </section>
       </main>
       <SiteFooter />

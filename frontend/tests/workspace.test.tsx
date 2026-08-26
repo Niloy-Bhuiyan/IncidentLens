@@ -52,9 +52,23 @@ describe("InvestigationWorkspace", () => {
 
     expect(screen.getByLabelText(/investigation in progress/i)).toBeInTheDocument();
     expect(await screen.findByText(investigation.report.likely_root_cause)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /checkout payment requests started failing/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /the commit changed normalization/i })).toBeInTheDocument();
     expect(screen.getByText(/inspect langgraph runtime/i)).toBeInTheDocument();
     await waitFor(() => expect(window.history.replaceState).toHaveBeenCalled());
+  });
+
+  it("recovers from an API error with an actionable retry", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { code: "provider_unavailable", message: "Demo temporarily unavailable" } }),
+    }));
+
+    render(<InvestigationWorkspace initialId="demo" />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Demo temporarily unavailable");
+    expect(screen.getByRole("button", { name: /rebuild from the demo evidence/i })).toBeEnabled();
   });
 });
 

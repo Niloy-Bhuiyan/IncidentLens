@@ -13,6 +13,7 @@ describe("API client", () => {
       "http://localhost:8000/api/v1/investigations",
       expect.objectContaining({
         method: "POST",
+        signal: expect.any(AbortSignal),
         body: JSON.stringify({
           question: "Why did checkout fail?",
           provider: "mock",
@@ -20,6 +21,30 @@ describe("API client", () => {
         }),
       }),
     );
+  });
+
+  it("translates network failures without exposing internals", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("connection details")));
+
+    await expect(api.investigate("Why did checkout fail?")).rejects.toEqual(
+      expect.objectContaining({ code: "network_error" }),
+    );
+    await expect(api.investigate("Why did checkout fail?")).rejects.toThrow(/could not be reached/i);
+  });
+
+  it("aborts a stalled investigation instead of loading forever", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url: string, options: RequestInit) => (
+      new Promise((_resolve, reject) => {
+        options.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+      })
+    )));
+
+    const request = api.investigate("Why did checkout fail?");
+    const expectation = expect(request).rejects.toEqual(expect.objectContaining({ code: "request_timeout" }));
+    await vi.advanceTimersByTimeAsync(25_001);
+    await expectation;
+    vi.useRealTimers();
   });
 
   it("preserves safe request metadata on errors", async () => {

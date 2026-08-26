@@ -1,6 +1,7 @@
 import type { DemoSummary, EvaluationResult, Evidence, Investigation } from "./types";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+const REQUEST_TIMEOUT_MS = 25_000;
 
 export class ApiError extends Error {
   constructor(
@@ -15,12 +16,35 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    cache: "no-store",
-  });
-  const payload: unknown = await response.json();
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "name" in error && error.name === "AbortError") {
+      throw new ApiError("The investigation timed out. Please try the demo again.", "request_timeout");
+    }
+    throw new ApiError("The investigation API could not be reached. Please try again.", "network_error");
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new ApiError(
+      response.ok ? "The investigation API returned an invalid response." : `Request failed with status ${response.status}`,
+      "invalid_response",
+      undefined,
+      response.status,
+    );
+  }
   if (!response.ok) {
     const error =
       typeof payload === "object" && payload !== null && "error" in payload

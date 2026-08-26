@@ -93,7 +93,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .workspaceGrid { min-height: calc(100vh - 153px); display: grid; grid-template-columns: 170px minmax(480px, 1fr) minmax(310px, 410px); }
 .sourceRail { padding: 27px 20px; border-right: 1px solid var(--line); background: #efeee8; }
 .railTitle { display: block; margin: 0 5px 19px; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .12em; }
-.sourceType { min-height: 39px; padding: 0 7px; display: flex; align-items: center; justify-content: space-between; color: #5b6662; font-size: 12px; border-bottom: 1px solid #ddddd6; }
+.sourceType { width: 100%; min-height: 39px; padding: 0 7px; display: flex; align-items: center; justify-content: space-between; color: #5b6662; font-size: 12px; border: 0; border-bottom: 1px solid #ddddd6; background: transparent; text-align: left; cursor: pointer; }
+.sourceType:hover:not(:disabled) { color: var(--forest); background: #e4e5de; }
+.sourceType:disabled { cursor: default; }
 .sourceType b { font: 500 10px var(--mono); color: #818985; }
 .railLink { display: block; margin: 35px 5px; font-size: 11px; font-weight: 650; color: var(--forest-2); }
 .investigationPane { padding: 27px 34px 70px; border-right: 1px solid var(--line); }
@@ -104,10 +106,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .questionBox button, .errorState button { min-width: 100px; border: 1px solid var(--forest); background: var(--forest); color: white; font-weight: 650; font-size: 12px; cursor: pointer; }
 .questionBox button:disabled { opacity: .55; cursor: progress; }
 .rootCauseCard { margin-top: 28px; padding: 27px 28px 25px; color: #f6f7f3; background: var(--forest); }
+.failureSummary { margin-top: 28px; padding: 4px 2px 24px; border-bottom: 1px solid var(--line); }
+.failureSummary h2 { max-width: 700px; margin: 10px 0 8px; font-size: 24px; line-height: 1.25; letter-spacing: -.035em; }
+.failureSummary p { max-width: 720px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .resultLabel { display: flex; justify-content: space-between; gap: 20px; font: 600 9px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
 .resultLabel span { color: #edbd6e; }
 .resultLabel b { color: #bdd3ca; }
 .rootCauseCard h2 { margin: 26px 0 30px; max-width: 760px; font-size: clamp(21px, 2vw, 29px); line-height: 1.35; letter-spacing: -.035em; font-weight: 580; }
+.rootCauseExplanation { max-width: 760px; margin: -14px 0 28px; color: #c8d8d2; font-size: 14px; line-height: 1.65; }
 .resultMeta { padding-top: 19px; border-top: 1px solid rgba(255,255,255,.17); display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 8px 12px; font: 500 9px var(--mono); text-transform: uppercase; }
 .resultMeta span { color: #94aea4; }
 .resultMeta b { color: white; }
@@ -174,6 +180,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .pageHero h1 { margin: 18px 0 24px; font-size: clamp(51px, 7vw, 88px); line-height: .98; letter-spacing: -.06em; }
 .pageHero h1 em { color: var(--forest-2); font-style: normal; }
 .pageHero p { max-width: 700px; color: var(--muted); font-size: 17px; line-height: 1.65; }
+.pageActions { display: flex; align-items: center; gap: 28px; margin-top: 30px; }
 .benchmarkIntro { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); }
 .benchmarkIntro div { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
 .benchmarkIntro div + div { border-left: 1px solid var(--line); }
@@ -181,7 +188,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .benchmarkIntro b { font: 600 11px var(--mono); overflow-wrap: anywhere; }
 .benchmarkTable { margin-top: 65px; }
 .benchmarkTable > div[role="table"] { margin-top: 25px; border-top: 1px solid var(--ink); }
-.benchmarkRow { min-height: 75px; display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 20px; align-items: center; border-bottom: 1px solid var(--line); }
+.benchmarkRow { min-height: 75px; display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 20px; align-items: center; border-bottom: 1px solid var(--line); }
 .benchmarkHeader { min-height: 38px; font: 500 8px var(--mono); text-transform: uppercase; color: var(--muted); }
 .metricCell b { display: block; font: 600 15px var(--mono); }
 .metricCell i { display: block; width: 75%; height: 3px; margin-top: 8px; background: #d8d9d2; }
@@ -213,6 +220,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .boundarySection { margin-top: 90px; padding: 45px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
 .boundarySection h2 { font-size: 39px; letter-spacing: -.045em; }
 .boundarySection > div { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; color: var(--muted); line-height: 1.7; }
+
+.implementationGrid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--ink); }
+.implementationGrid article { min-height: 285px; padding: 30px 34px 28px 0; border-bottom: 1px solid var(--line); }
+.implementationGrid article:nth-child(even) { padding-left: 34px; border-left: 1px solid var(--line); }
+.implementationGrid article > span { font: 500 9px var(--mono); color: var(--amber); }
+.implementationGrid h2 { margin: 42px 0 12px; font-size: 25px; letter-spacing: -.035em; }
+.implementationGrid p, .vectorBoundary p, .providerSection > div > p, .dataPath p { color: var(--muted); line-height: 1.7; }
+.implementationGrid a, .providerSection a { display: inline-block; margin-top: 14px; color: var(--forest-2); font-size: 10px; font-weight: 650; }
+.implementationGrid code, .providerSection code { font-family: var(--mono); }
+.vectorBoundary { margin-top: 95px; padding: 45px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 65px; color: white; background: var(--forest); }
+.vectorBoundary h2 { margin: 16px 0 0; font-size: 35px; letter-spacing: -.04em; }
+.vectorBoundary p { margin: 0; color: #bed0c9; }
+.providerSection { margin-top: 100px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 80px; }
+.providerSection h2 { margin: 16px 0; font-size: 38px; letter-spacing: -.045em; }
+.providerSection ol { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
+.providerSection li { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.providerSection h3 { margin: 0 0 7px; font-size: 16px; }
+.providerSection li p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.dataPath { margin-top: 95px; padding: 42px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+.dataPath h2 { max-width: 850px; margin: 17px 0; font-size: 32px; line-height: 1.25; letter-spacing: -.04em; }
+.dataPath p { max-width: 780px; }
 
 .evidencePage { max-width: 1050px; }
 .backLink { display: inline-block; margin-bottom: 50px; font-size: 12px; font-weight: 650; }
@@ -256,6 +284,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
   .heroCopy h1 { font-size: 55px; }
   .heroCopy > p { font-size: 16px; }
   .heroActions { align-items: stretch; flex-direction: column; }
+  .pageActions { align-items: stretch; flex-direction: column; }
   .textLink { width: max-content; }
   .trustList { margin-top: 50px; gap: 12px; }
   .demoCase { padding: 24px; box-shadow: 8px 10px 0 #e4e2da; }
@@ -292,13 +321,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
   .benchmarkIntro div + div { border-left: 0; }
   .benchmarkIntro div:nth-child(even) { border-left: 1px solid var(--line); }
   .benchmarkIntro div:nth-child(n+3) { border-top: 1px solid var(--line); }
-  .benchmarkRow { grid-template-columns: 1.25fr repeat(3, .7fr); gap: 8px; }
+  .benchmarkRow { grid-template-columns: 1.2fr repeat(4, .65fr); gap: 6px; }
   .benchmarkRow strong { font-size: 11px; }
   .metricCell i { display: none; }
   .honestyNote { grid-template-columns: 1fr; gap: 12px; }
   .architectureFlow { grid-template-columns: 1fr; gap: 0; margin-bottom: 70px; }
   .architectureFlow > i { transform: rotate(90deg); justify-self: center; }
   .architectureColumns, .graphSection, .boundarySection > div, .evidenceDetails, .aboutGrid { grid-template-columns: 1fr; }
+  .implementationGrid, .vectorBoundary, .providerSection { grid-template-columns: 1fr; }
+  .implementationGrid article, .implementationGrid article:nth-child(even) { min-height: auto; padding: 28px 0; border-left: 0; }
+  .implementationGrid h2 { margin-top: 28px; }
+  .vectorBoundary { margin-left: -20px; margin-right: -20px; padding: 35px 20px; gap: 25px; }
+  .providerSection { gap: 40px; }
   .architectureColumns { gap: 55px; }
   .graphSection { margin: 80px -20px 0; padding: 40px 20px; }
   .boundarySection h2 { font-size: 32px; }
