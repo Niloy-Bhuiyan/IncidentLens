@@ -30,3 +30,9 @@ Thumbs.db
 
 # Generated but reproducible artifacts
 evaluation/results/*.tmp
+
+# local agent tooling
+.claude/
+CLAUDE.md
+AGENTS.md
+.mcp.json
